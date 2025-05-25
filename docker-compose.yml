@@ -1,24 +1,40 @@
-version: '3'
-services:
-  site:
-    build: ./site
-    ports:
-      - "8080:80"
-    depends_on:
-      - api
+version: '3.8'
 
+services:
   api:
     build: ./api
+    container_name: biblioteca_api
     ports:
       - "5000:5000"
+    volumes:
+      - ./api:/app
     depends_on:
-      - banco
+      - db
 
-  banco:
-    image: postgres
+  site:
+    build: ./site
+    container_name: biblioteca_site
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./site:/app
+      - /app/node_modules
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: biblioteca
+      - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:15
+    container_name: biblioteca_db
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: biblioteca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
