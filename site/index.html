@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Biblioteca Virtual</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Biblioteca Virtual</h1>
+
+        <form id="formLivro" class="formulario">
+            <input type="text" name="titulo" placeholder="Título do livro" required>
+            <input type="text" name="autor" placeholder="Autor do livro" required>
+            <input type="file" name="foto" accept="image/*">
+            <button type="submit">Cadastrar Livro</button>
+        </form>
+
+        <div class="livros" id="livros"></div>
+    </div>
+
+    <script>
+        async function carregarLivros() {
+            const res = await fetch('http://localhost:5000/livros');
+            const livros = await res.json();
+            const container = document.getElementById('livros');
+            container.innerHTML = '';
+
+            livros.forEach(livro => {
+                const div = document.createElement('div');
+                div.className = 'livro';
+
+                if (livro.foto) {
+                    const img = document.createElement('img');
+                    img.src = 'http://localhost:5000' + livro.foto;
+                    div.appendChild(img);
+                }
+
+                const titulo = document.createElement('h3');
+                titulo.textContent = livro.titulo;
+                div.appendChild(titulo);
+
+                const autor = document.createElement('p');
+                autor.textContent = livro.autor;
+                div.appendChild(autor);
+
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('formLivro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            await fetch('http://localhost:5000/livros', {
+                method: 'POST',
+                body: formData
+            });
+            e.target.reset();
+            carregarLivros();
+        });
+
+        carregarLivros();
+    </script>
+</body>
+</html>
