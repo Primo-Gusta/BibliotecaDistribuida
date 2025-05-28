@@ -8,7 +8,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Configurações do banco de dados
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@banco:5432/biblioteca'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@db:5432/biblioteca'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Diretório para uploads

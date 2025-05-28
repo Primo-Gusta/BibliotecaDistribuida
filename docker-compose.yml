@@ -1,23 +1,35 @@
-version: '3'
+version: '3.8'
+
 services:
-  site:
-    build: ./site
-    ports:
-      - "8080:80"
-    depends_on:
-      - api
   api:
     build: ./api
+    container_name: biblioteca_api
     ports:
       - "5000:5000"
+    volumes:
+      - ./api:/app
     depends_on:
-      - banco
+      - db
 
-  banco:
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: biblioteca
+  site:
+    image: nginx:alpine
+    container_name: biblioteca_site
+    ports:
+      - "3000:80"
+    volumes:
+      - ./site:/usr/share/nginx/html:ro
+
+  db:
+    image: postgres:15
+    container_name: biblioteca_db
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: biblioteca
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
