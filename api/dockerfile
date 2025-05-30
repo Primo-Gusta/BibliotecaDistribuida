@@ -1,6 +1,29 @@
-FROM python:3.11
+# Use an official Python runtime as a parent image
+FROM python:3.11-slim
+
+# Set the working directory in the container
 WORKDIR /app
-COPY . .
+
+# Copy the requirements file into the container at /app
+COPY requirements.txt .
+
+# Install any needed packages specified in requirements.txt
+# Use --no-cache-dir to reduce image size
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container at /app
+# Assuming app.py is the main file and handles static/uploads internally or via volumes
+COPY app.py .
+
+# Create the uploads directory (if needed by the application)
+# The original Dockerfile had this, keeping it for consistency unless app analysis shows otherwise
 RUN mkdir -p /app/uploads
-RUN pip install -r requirements.txt
-CMD ["python", "app.py"]
+
+# Make port 5000 available to the world outside this container (Flask default)
+EXPOSE 5000
+
+# Run app.py when the container launches using Flask's development server
+# Ensure app.py runs on 0.0.0.0 to be accessible from outside the container
+# Flask default is 127.0.0.1, need to override in app.py or CMD
+# Adding host parameter to the command
+CMD ["flask", "run", "--host=0.0.0.0"]

@@ -2,25 +2,34 @@ version: '3.8'
 
 services:
   api:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: Dockerfile # Explicitly state the Dockerfile name
     container_name: biblioteca_api
     ports:
       - "5000:5000"
+    # Use environment variables for database connection instead of hardcoding in app.py
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/biblioteca
     volumes:
-      - ./api:/app
+      - ./api:/app # Mount for development, consider removing for production build
     depends_on:
-      - db
+      db: # Wait for db to be healthy before starting api
+        condition: service_healthy
 
   site:
-    image: nginx:alpine
+    build:
+      context: ./site
+      dockerfile: dockerfile # Explicitly state the Dockerfile name
     container_name: biblioteca_site
     ports:
       - "3000:80"
-    volumes:
-      - ./site:/usr/share/nginx/html:ro
+    # No need for volume mount if using build context, unless for live reload
+    # volumes:
+    #   - ./site:/usr/share/nginx/html:ro
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine # Use alpine for smaller image size
     container_name: biblioteca_db
     ports:
       - "5432:5432"
@@ -30,6 +39,14 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # Mount the init script to be executed on first run
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck: # Add healthcheck for depends_on condition
+      test: ["CMD-SHELL", "pg_isready -U postgres -d biblioteca"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pgdata:
+
