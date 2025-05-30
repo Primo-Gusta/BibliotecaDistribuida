@@ -20,45 +20,69 @@
     </div>
 
     <script>
+        // *** IMPORTANTE: Substitua 'SEU_IP_PUBLICO_AWS' pelo IP público da sua instância EC2 ***
+        const backendUrl = 'http://18.188.143.231:5000'; // Use o IP público da sua instância AWS aqui
+
         async function carregarLivros() {
-            const res = await fetch('http://localhost:5000/livros');
-            const livros = await res.json();
-            const container = document.getElementById('livros');
-            container.innerHTML = '';
-
-            livros.forEach(livro => {
-                const div = document.createElement('div');
-                div.className = 'livro';
-
-                if (livro.foto) {
-                    const img = document.createElement('img');
-                    img.src = 'http://localhost:5000' + livro.foto;
-                    div.appendChild(img);
+            try {
+                const res = await fetch(`${backendUrl}/livros`);
+                if (!res.ok) {
+                    throw new Error(`Erro ao carregar livros: ${res.statusText}`);
                 }
+                const livros = await res.json();
+                const container = document.getElementById('livros');
+                container.innerHTML = ''; // Limpa o container antes de adicionar novos livros
 
-                const titulo = document.createElement('h3');
-                titulo.textContent = livro.titulo;
-                div.appendChild(titulo);
+                livros.forEach(livro => {
+                    const div = document.createElement('div');
+                    div.className = 'livro';
 
-                const autor = document.createElement('p');
-                autor.textContent = livro.autor;
-                div.appendChild(autor);
+                    // Verifica se há foto e constrói a URL completa
+                    if (livro.foto) {
+                        const img = document.createElement('img');
+                        // Assume que 'livro.foto' contém o caminho relativo a partir da raiz do backend
+                        img.src = `${backendUrl}${livro.foto}`; 
+                        img.alt = `Capa do livro ${livro.titulo}`;
+                        div.appendChild(img);
+                    }
 
-                container.appendChild(div);
-            });
+                    const titulo = document.createElement('h3');
+                    titulo.textContent = livro.titulo;
+                    div.appendChild(titulo);
+
+                    const autor = document.createElement('p');
+                    autor.textContent = `Autor: ${livro.autor}`;
+                    div.appendChild(autor);
+
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Falha ao carregar livros:', error);
+                document.getElementById('livros').innerHTML = '<p>Erro ao carregar livros. Verifique o console para mais detalhes.</p>';
+            }
         }
 
         document.getElementById('formLivro').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
-            await fetch('http://localhost:5000/livros', {
-                method: 'POST',
-                body: formData
-            });
-            e.target.reset();
-            carregarLivros();
+            
+            try {
+                const res = await fetch(`${backendUrl}/livros`, {
+                    method: 'POST',
+                    body: formData // Envia como FormData para lidar com o upload de arquivo
+                });
+                if (!res.ok) {
+                    throw new Error(`Erro ao cadastrar livro: ${res.statusText}`);
+                }
+                e.target.reset();
+                carregarLivros(); // Recarrega a lista após o cadastro
+            } catch (error) {
+                console.error('Falha ao cadastrar livro:', error);
+                alert('Erro ao cadastrar livro. Verifique o console.');
+            }
         });
 
+        // Carrega os livros quando a página é carregada
         carregarLivros();
     </script>
 </body>
